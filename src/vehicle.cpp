@@ -11,7 +11,7 @@
 #define SAFE_DISTANCE 20.0
 #define TIME_INTERVAL 1.0
 #define SPEED_LIMIT 20.0 //unit:m/s
-#define ACCELERATION_LIMIT 5.0 //unit:m/s/s
+#define ACCELERATION_LIMIT 0.9 //unit:m/s/s
 #define LC_D_SPEED 2.0 //unit:m/s
 /**
  * Initializes Vehicle
@@ -92,8 +92,8 @@ vector<string> Vehicle::successor_states() {
     states.push_back("KL");
     string state = this->state;
     if(state.compare("KL") == 0) {
-        states.push_back("PLCL");
-        states.push_back("PLCR");
+        //states.push_back("PLCL");
+        //states.push_back("PLCR");
     } else if (state.compare("PLCL") == 0) {
         //if (lane != lanes_available - 1) {
             states.push_back("PLCL");
@@ -254,7 +254,7 @@ vector<vector<Vehicle>> Vehicle::keep_lane_trajectory(map<int, vector<Vehicle>> 
         double new_vs = kinematics[1];
         double new_as = kinematics[2];
         cout << "new_s is " << new_s << ", this->s is " << this->s << endl;
-        if (new_s > (this->s + 1.0)) {
+        if (new_s > this->s) {
             option.push_back(Vehicle(this->s, this->d, this->vs, this->vd, this->as, this->ad, state, this->goal_lane));
             double new_d = this->lane*LANE_WIDTH + LANE_WIDTH/2.0;
             option.push_back(Vehicle(new_s, new_d, new_vs, this->vd, new_as, this->ad, "KL", this->lane));

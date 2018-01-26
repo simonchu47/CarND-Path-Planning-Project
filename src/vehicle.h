@@ -51,7 +51,7 @@ public:
 
   string state;
 
-  vector<string> actions = {"SPEEDUP", "MAINTAIN", "SPEEDDOWN"};
+  vector<string> actions = {"SPEEDUP", "MAINTAIN", "SLOWDOWN"};
 
   /**
   * Constructor

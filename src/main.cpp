@@ -439,7 +439,7 @@ int main() {
 		  ref_y = car_y;
 		  ref_yaw = car_yaw_rad;
 		} else {
-		  /*
+		  
 		  ref_x = previous_path_x[prev_size - 1];
 		  ref_y = previous_path_y[prev_size - 1];
 		  double prev_ref_x = previous_path_x[prev_size - 2];
@@ -450,8 +450,8 @@ int main() {
 		  ptsx.push_back(ref_x);
 		  ptsy.push_back(prev_ref_y);
 		  ptsy.push_back(ref_y);
-		  */
 		  
+		  /*
 		  ref_x = previous_path_x[1];
 		  ref_y = previous_path_y[1];
 		  //ref_x = previous_path_x[0];
@@ -466,7 +466,7 @@ int main() {
 		  ptsx.push_back(ref_x);
 		  ptsy.push_back(prev_ref_y);
 		  ptsy.push_back(ref_y);
-		  
+		  */
 		}
 
 		/*
@@ -481,12 +481,28 @@ int main() {
 		ref_yaw = car_yaw_rad;
 		*/
 
-		vector<double> wp1 = getXY(traj[1].s, traj[1].d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+                //double new_as = 2.0;
+                
+                //double new_vs = min(car_vs_vd[0] + new_as, 20.0);
+                //double new_s = car_s + new_vs*3.0 + new_as*3.0*3.0/2.0;
+                //double new_lane = (int)car_d/4;
+		double wp1_time = PREDICT_TIME_SPAN*1.2;
+		double wp1_s = traj[1].s + traj[1].vs*wp1_time + traj[1].as*wp1_time*wp1_time/2;
+		double wp1_d = traj[1].d + traj[1].vd*wp1_time + traj[1].ad*wp1_time*wp1_time/2;
+
+		//vector<double> wp1 = getXY(traj[1].s, traj[1].d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+		vector<double> wp1 = getXY(wp1_s, wp1_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+
 		//vector<double> wp1 = getXY(car_s + 30, 2 + 4*traj[1].lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
+		//vector<double> wp1 = getXY(new_s, 2 + 4*new_lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
 
 		// Extend the wp1 to get the second way point
-		double wp2_s = traj[1].s + traj[1].vs*PREDICT_TIME_SPAN + traj[1].as*PREDICT_TIME_SPAN*PREDICT_TIME_SPAN/2;
-		double wp2_d = traj[1].d + traj[1].vd*PREDICT_TIME_SPAN + traj[1].ad*PREDICT_TIME_SPAN*PREDICT_TIME_SPAN/2;
+		double wp2_time = PREDICT_TIME_SPAN*2;
+		double wp2_s = traj[1].s + traj[1].vs*wp2_time + traj[1].as*wp2_time*wp2_time/2;
+		double wp2_d = traj[1].d + traj[1].vd*wp2_time + traj[1].ad*wp2_time*wp2_time/2;
+		//double wp2_s = new_s + new_vs*3.0 + new_as*3.0*3.0/2.0;
+		//double wp2_d = 2 + 4*new_lane;
+
 		vector<double> wp2 = getXY(wp2_s, wp2_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
 		//vector<double> wp2 = getXY(car_s + 60, 2 + 4*traj[1].lane, map_waypoints_s, map_waypoints_x, map_waypoints_y);
 
@@ -506,6 +522,15 @@ int main() {
 		  //cout << "ptsx[" << i << "] is " << ptsx[i] << endl;
 		}
 
+		bool wp_sequence_wrong = false;
+                for (int i = 0 ; i < ptsx.size() - 1; ++i) {
+		  if (ptsx[i] > ptsx[i + 1]) {
+                    wp_sequence_wrong = true;
+                    break;
+                  }
+                }
+
+                if (!wp_sequence_wrong) {
 		// Using spline tool
 		// Create a spline
 		tk::spline s;
@@ -513,29 +538,33 @@ int main() {
 		// Set the waypoints to the spline
 		s.set_points(ptsx, ptsy);
 
-		/*
+		
 		for (int i = 0; i < prev_size; ++i) {
 		  next_x_vals.push_back(previous_path_x[i]);
 		  next_y_vals.push_back(previous_path_y[i]);
-		}*/
+		}/*
 		if (prev_size > 1) {
 		  next_x_vals.push_back(previous_path_x[0]);
 		  next_y_vals.push_back(previous_path_y[0]);
 		  next_x_vals.push_back(previous_path_x[1]);
 		  next_y_vals.push_back(previous_path_y[1]);
-		}
+		}*/
 
 		//double target_x = ptsx[2];
 		//double target_y = ptsy[2];
-		//double target_x = 30.0;
-		double target_x = traj[1].s - traj[0].s;
+		//double target_x = new_vs*1.0;
+                double target_x = 30;
+
+		//double target_x = traj[1].s - traj[0].s;
+
 		double target_y = s(target_x);
 		double target_dist = sqrt(target_x*target_x + target_y*target_y);
 		//double N = target_dist/(0.02*45*MPH_TO_MPS);
 		double N = target_dist/(0.02*traj[1].vs);
+                //double N = target_dist/(0.02*new_vs);
 		 
-		//int remain_steps = PREDICT_TIME_SPAN/TIME_STEP - prev_size;
-		int remain_steps = PREDICT_TIME_SPAN/TIME_STEP;
+		int remain_steps = PREDICT_TIME_SPAN/TIME_STEP - prev_size;
+		//int remain_steps = PREDICT_TIME_SPAN/TIME_STEP;
 		double x_addon = 0.0;
 		//double x_step = target_x / remain_steps;
 		double x_step = target_x/N;
@@ -552,6 +581,7 @@ int main() {
 		  next_x_vals.push_back(x_point);
 		  next_y_vals.push_back(y_point);
 		}
+                }
 		} else {
 
                 }

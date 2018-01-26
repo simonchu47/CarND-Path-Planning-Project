@@ -7,7 +7,7 @@
 
 const float REACH_GOAL = 0.3;
 const float EFFICIENCY = 0.1;
-const float COLLISION = 0.6;
+const float COLLISION = 100;
 
 float goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data) {
     /*
@@ -48,17 +48,22 @@ float inefficiency_cost(const Vehicle & vehicle, const vector<Vehicle> & traject
 }
 
 float collision_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data) {
+    
     float cost = 0.0;
+    Vehicle trajectory_last = trajectory[1];
+    cout << "+++++++traj_last_s is " << trajectory_last.s << " +++++++++" << endl;
     for (map<int, vector<Vehicle>>::const_iterator it = predictions.begin(); it != predictions.end(); ++it) {
         int key = it->first;
         Vehicle non_ego = it->second[0];
         if (vehicle.lane == non_ego.lane && key != -1) {
-            float dist = fabs(vehicle.s - non_ego.s);
+            float non_ego_expect_s = non_ego.s + non_ego.vs;
+            cout << "non_ego s = " << non_ego.s << ", vs = " << non_ego.vs << endl;
+            float dist = fabs(trajectory_last.s - non_ego_expect_s);
 	    /*
             if (dist < 5.0) {
 	        cost += 1.0;
 	    }*/
-            cost += 1 - exp(-dist/5.0);
+            cost += 1 - exp(-5.0/dist);
         }
     }
     cout << "COLLISION cost is " << cost << endl; 

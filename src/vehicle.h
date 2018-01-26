@@ -51,6 +51,8 @@ public:
 
   string state;
 
+  vector<string> actions = {"SPEEDUP", "MAINTAIN", "SPEEDDOWN"};
+
   /**
   * Constructor
   */
@@ -67,13 +69,15 @@ public:
 
   vector<string> successor_states();
 
-  vector<Vehicle> generate_trajectory(string state, map<int, vector<Vehicle>> predictions);
+  vector<vector<Vehicle>> generate_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
   vector<double> get_kinematics(map<int, vector<Vehicle>> predictions, int lane, double interval);
 
+  vector<double> action(map<int, vector<Vehicle>> predictions, int lane, double interval, int choice);
+
   vector<Vehicle> constant_speed_trajectory();
 
-  vector<Vehicle> keep_lane_trajectory(map<int, vector<Vehicle>> predictions);
+  vector<vector<Vehicle>> keep_lane_trajectory(map<int, vector<Vehicle>> predictions);
 
   vector<Vehicle> lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
 

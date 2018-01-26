@@ -9,6 +9,7 @@
 
 #define LANE_WIDTH 4.0 
 #define SAFE_DISTANCE 20.0
+#define CAR_LENGTH 3.0
 #define TIME_INTERVAL 1.0
 #define SPEED_LIMIT 20.0 //unit:m/s
 #define ACCELERATION_LIMIT 0.9 //unit:m/s/s
@@ -92,17 +93,21 @@ vector<string> Vehicle::successor_states() {
     states.push_back("KL");
     string state = this->state;
     if(state.compare("KL") == 0) {
-        //states.push_back("PLCL");
-        //states.push_back("PLCR");
+        states.push_back("PLCL");
+        states.push_back("PLCR");
     } else if (state.compare("PLCL") == 0) {
         //if (lane != lanes_available - 1) {
-            states.push_back("PLCL");
+        states.push_back("PLCL");
+	if (this->vs > 10.0) {
             states.push_back("LCL");
+        }
         //}
     } else if (state.compare("PLCR") == 0) {
         //if (lane != 0) {
-            states.push_back("PLCR");
+         states.push_back("PLCR");
+         if (this->vs > 10.0) {
             states.push_back("LCR");
+         }
         //}
     } else if (state.compare("LCL") == 0) {
         states.push_back("LCL");
@@ -131,15 +136,19 @@ vector<vector<Vehicle>> Vehicle::generate_trajectory(string state, map<int, vect
         }
     } else if (state.compare("LCL") == 0 || state.compare("LCR") == 0) {
         //trajectory = lane_change_trajectory(state, predictions);
-	vector<Vehicle> options = lane_change_trajectory(state, predictions);
+	vector<vector<Vehicle>> options = lane_change_trajectory(state, predictions);
         if (options.size() > 0) {
-            trajectory.push_back(options);
+            for (int i = 0; i < options.size(); ++i) {
+                trajectory.push_back(options[i]);
+            }
         }
     } else if (state.compare("PLCL") == 0 || state.compare("PLCR") == 0) {
         //trajectory = prep_lane_change_trajectory(state, predictions);
-        vector<Vehicle> options = prep_lane_change_trajectory(state, predictions);
+        vector<vector<Vehicle>> options = prep_lane_change_trajectory(state, predictions);
         if (options.size() > 0) {
-            trajectory.push_back(options);
+            for (int i = 0; i < options.size(); ++i) {
+                trajectory.push_back(options[i]);
+            }
         }
     }
     return trajectory;
@@ -279,7 +288,7 @@ vector<vector<Vehicle>> Vehicle::keep_lane_trajectory(map<int, vector<Vehicle>> 
     return trajectory;*/
 }
 
-vector<Vehicle> Vehicle::prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions) {
+vector<vector<Vehicle>> Vehicle::prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions) {
     /*
     Generate a trajectory preparing for a lane change.
     */
@@ -289,11 +298,41 @@ vector<Vehicle> Vehicle::prep_lane_change_trajectory(string state, map<int, vect
     Vehicle vehicle_behind;
     int new_lane = this->lane + lane_direction[state];
     //this->goal_lane = new_lane;
-    vector<Vehicle> trajectory;
+
+    vector<vector<Vehicle>> trajectory;
     if (new_lane < 0 || new_lane > 2) {
       return trajectory;
     }
 
+    Vehicle vehicle_ahead;
+    bool car_ahead = false;
+    if (get_vehicle_ahead(predictions, this->lane, vehicle_ahead)) {
+        if (vehicle_ahead.s - this->s < SAFE_DISTANCE) {
+	    car_ahead = true;
+        }
+    }
+    int choice = 0;
+    if (car_ahead) {
+        choice = 1;
+    }
+
+    for(choice; choice < this->actions.size(); ++choice) {
+        vector<Vehicle> option;
+        //cout << "this->actions[choice] is " << this->actions[choice] << endl;
+        vector<double> kinematics = action(predictions, this->lane, TIME_INTERVAL, choice);
+        double new_s = kinematics[0];
+        double new_vs = kinematics[1];
+        double new_as = kinematics[2];
+        //cout << "new_s is " << new_s << ", this->s is " << this->s << endl;
+        if (new_s > this->s) {
+            option.push_back(Vehicle(this->s, this->d, this->vs, this->vd, this->as, this->ad, state, this->goal_lane));
+            double new_d = this->lane*LANE_WIDTH + LANE_WIDTH/2.0;
+            option.push_back(Vehicle(new_s, new_d, new_vs, this->vd, new_as, this->ad, state, new_lane));
+            trajectory.push_back(option);
+	} 
+    }
+
+    /*
     trajectory.push_back(Vehicle(this->s, this->d, this->vs, this->vd, this->as, this->ad, state, this->goal_lane));
 
     vector<double> curr_lane_new_kinematics = get_kinematics(predictions, this->lane, TIME_INTERVAL);
@@ -321,10 +360,11 @@ vector<Vehicle> Vehicle::prep_lane_change_trajectory(string state, map<int, vect
     //trajectory.push_back(Vehicle(this->lane, new_s, new_v, new_a, state));
     double new_d = this->lane*LANE_WIDTH + LANE_WIDTH/2.0;
     trajectory.push_back(Vehicle(new_s, new_d, new_vs, this->vd, new_as, this->ad, state, new_lane));
+    */
     return trajectory;
 }
 
-vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions) {
+vector<vector<Vehicle>> Vehicle::lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions) {
     /*
     Generate a lane change trajectory.
     */
@@ -332,7 +372,8 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
     if (new_lane != this->goal_lane) { //This might be during lane-changing
       new_lane = this->goal_lane;
     }
-    vector<Vehicle> trajectory;
+
+    vector<vector<Vehicle>> trajectory;
     if (new_lane < 0 || new_lane > 2) {
       return trajectory;
     }
@@ -341,23 +382,53 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
     //Check if a lane change is possible (check if another vehicle occupies that spot).
     for (map<int, vector<Vehicle>>::iterator it = predictions.begin(); it != predictions.end(); ++it) {
         next_lane_vehicle = it->second[0];
-        if (next_lane_vehicle.s < (this->s + SAFE_DISTANCE) && next_lane_vehicle.s > (this->s - SAFE_DISTANCE) && next_lane_vehicle.lane == new_lane) {
+        if (next_lane_vehicle.s < (this->s + CAR_LENGTH*2) && next_lane_vehicle.s > (this->s - CAR_LENGTH*2) && next_lane_vehicle.lane == new_lane) {
             //If lane change is not possible, return empty trajectory.
             return trajectory;
         }
     }
+
+    Vehicle vehicle_ahead;
+    bool car_ahead = false;
+    if (get_vehicle_ahead(predictions, new_lane, vehicle_ahead)) {
+        if (vehicle_ahead.s - this->s < SAFE_DISTANCE) {
+	    car_ahead = true;
+        }
+    }
+    int choice = 0;
+    if (car_ahead) {
+        choice = 1;
+    }
+
+    for(choice; choice < this->actions.size(); ++choice) {
+        vector<Vehicle> option;
+        //cout << "this->actions[choice] is " << this->actions[choice] << endl;
+        vector<double> kinematics = action(predictions, new_lane, TIME_INTERVAL, choice);
+        double new_s = kinematics[0];
+        double new_vs = kinematics[1];
+        double new_as = kinematics[2];
+        //cout << "new_s is " << new_s << ", this->s is " << this->s << endl;
+        if (new_s > this->s) {
+            option.push_back(Vehicle(this->s, this->d, this->vs, this->vd, this->as, this->ad, state, this->goal_lane));
+            double new_ad = 0.0;
+	    //double new_vd = LC_D_SPEED*lane_direction[state];
+	    //double new_d = this->d + new_vd*TIME_INTERVAL;
+	    double new_vd = 0.0;
+	    double new_d = new_lane*LANE_WIDTH + LANE_WIDTH/2;
+            option.push_back(Vehicle(new_s, new_d, new_vs, new_vd, new_as, new_ad, state, new_lane));
+            trajectory.push_back(option);
+	} 
+    }
+    
+    /*
     trajectory.push_back(Vehicle(this->s, this->d, this->vs, this->vd, this->as, this->ad, state, this->goal_lane));
     vector<double> kinematics = get_kinematics(predictions, new_lane, TIME_INTERVAL);
     
     double new_ad = 0.0;
     double new_vd = LC_D_SPEED*lane_direction[state];
     double new_d = this->d + new_vd*TIME_INTERVAL;
-    /*
-    double new_d = 2.0 + new_lane * 4.0;
-    double new_vd = 0.0;
-    double new_ad = 0.0;
-    */
     trajectory.push_back(Vehicle(kinematics[0], new_d, kinematics[1], new_vd, kinematics[2], new_ad, state, new_lane));
+    */
     return trajectory;
 }
 

@@ -488,7 +488,8 @@ int main() {
                 //double new_lane = (int)car_d/4;
 		double wp1_time = PREDICT_TIME_SPAN*1.2;
 		double wp1_s = traj[1].s + traj[1].vs*wp1_time + traj[1].as*wp1_time*wp1_time/2;
-		double wp1_d = traj[1].d + traj[1].vd*wp1_time + traj[1].ad*wp1_time*wp1_time/2;
+		//double wp1_d = traj[1].d + traj[1].vd*wp1_time + traj[1].ad*wp1_time*wp1_time/2;
+                double wp1_d = traj[1].d;
 
 		//vector<double> wp1 = getXY(traj[1].s, traj[1].d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
 		vector<double> wp1 = getXY(wp1_s, wp1_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
@@ -499,7 +500,10 @@ int main() {
 		// Extend the wp1 to get the second way point
 		double wp2_time = PREDICT_TIME_SPAN*2;
 		double wp2_s = traj[1].s + traj[1].vs*wp2_time + traj[1].as*wp2_time*wp2_time/2;
-		double wp2_d = traj[1].d + traj[1].vd*wp2_time + traj[1].ad*wp2_time*wp2_time/2;
+		//double wp2_d = traj[1].d + traj[1].vd*wp2_time + traj[1].ad*wp2_time*wp2_time/2;
+                double wp2_d = traj[1].d;
+                //double wp2_d = 4*traj[1].lane + 2.0;
+
 		//double wp2_s = new_s + new_vs*3.0 + new_as*3.0*3.0/2.0;
 		//double wp2_d = 2 + 4*new_lane;
 

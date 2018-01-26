@@ -79,9 +79,9 @@ public:
 
   vector<vector<Vehicle>> keep_lane_trajectory(map<int, vector<Vehicle>> predictions);
 
-  vector<Vehicle> lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
+  vector<vector<Vehicle>> lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
-  vector<Vehicle> prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
+  vector<vector<Vehicle>> prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
   void increment(int dt);
 

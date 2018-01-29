@@ -8,6 +8,7 @@
 const float REACH_GOAL = 1;
 const float EFFICIENCY = 0.1;
 const float COLLISION = 10;
+const float OVER_ACCE = 1;
 #define CAR_LENGTH 5.0 //unit:m
 
 float goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data) {
@@ -129,6 +130,19 @@ float collision_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory
     return cost;
 }
 
+float over_acceleration_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data) {
+    float cost = 0.0;
+    Vehicle trajectory_last = trajectory[1]; 
+    Vehicle ego = vehicle;
+    if (fabs(trajectory_last.as - ego.as) > 1.0) {
+	cost += 1.0;
+    }
+
+    cout << "Over Acceleration cost is " << cost << endl; 
+
+    return cost;
+}
+
 float lane_speed(const map<int, vector<Vehicle>> & predictions, int lane) {
     /*
     Average all non ego vehicles' speed, so to get the speed limit for a lane,
@@ -163,8 +177,8 @@ float calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> & 
     float cost = 0.0;
 
     //Add additional cost functions here.
-    vector< function<float(const Vehicle & , const vector<Vehicle> &, const map<int, vector<Vehicle>> &, map<string, float> &)>> cf_list = {goal_distance_cost, inefficiency_cost, collision_cost};
-    vector<float> weight_list = {REACH_GOAL, EFFICIENCY, COLLISION};
+    vector< function<float(const Vehicle & , const vector<Vehicle> &, const map<int, vector<Vehicle>> &, map<string, float> &)>> cf_list = {goal_distance_cost, inefficiency_cost, collision_cost, over_acceleration_cost};
+    vector<float> weight_list = {REACH_GOAL, EFFICIENCY, COLLISION, OVER_ACCE};
     
     for (int i = 0; i < cf_list.size(); i++) {
         float new_cost = weight_list[i]*cf_list[i](vehicle, trajectory, predictions, trajectory_data);

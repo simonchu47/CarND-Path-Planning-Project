@@ -405,7 +405,7 @@ vector<vector<Vehicle>> Vehicle::lane_change_trajectory(string state, map<int, v
     }
 
     for(choice; choice < this->actions.size(); ++choice) {
-        vector<Vehicle> option;
+        //vector<Vehicle> option;
         //cout << "this->actions[choice] is " << this->actions[choice] << endl;
         vector<double> kinematics = action(predictions, new_lane, TIME_INTERVAL, choice);
         double new_s = kinematics[0];
@@ -413,14 +413,18 @@ vector<vector<Vehicle>> Vehicle::lane_change_trajectory(string state, map<int, v
         double new_as = kinematics[2];
         //cout << "new_s is " << new_s << ", this->s is " << this->s << endl;
         if (new_s > this->s) {
-            option.push_back(Vehicle(this->s, this->d, this->vs, this->vd, this->as, this->ad, state, this->goal_lane));
-            double new_ad = 0.0;
-	    //double new_vd = LC_D_SPEED*lane_direction[state];
-	    //double new_d = this->d + new_vd*TIME_INTERVAL;
-	    double new_vd = 0.0;
-	    double new_d = new_lane*LANE_WIDTH + LANE_WIDTH/2;
-            option.push_back(Vehicle(new_s, new_d, new_vs, new_vd, new_as, new_ad, state, new_lane));
-            trajectory.push_back(option);
+	    for (int i = 1; i < 4; ++i) {
+		vector<Vehicle> option;
+                option.push_back(Vehicle(this->s, this->d, this->vs, this->vd, this->as, this->ad, state, this->goal_lane));
+                double new_ad = 0.0;
+	        //double new_vd = LC_D_SPEED*lane_direction[state];
+	        //double new_d = this->d + new_vd*TIME_INTERVAL;
+	        //double new_vd = 0.0;
+	        double new_d = new_lane*LANE_WIDTH + i*LANE_WIDTH/4;
+		double new_vd = new_d - this->d;
+                option.push_back(Vehicle(new_s, new_d, new_vs, new_vd, new_as, new_ad, state, new_lane));
+                trajectory.push_back(option);
+            }
 	} 
     }
     

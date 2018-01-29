@@ -8,7 +8,9 @@
 const float REACH_GOAL = 1;
 const float EFFICIENCY = 0.1;
 const float COLLISION = 10;
-const float OVER_ACCE = 1;
+const float S_OVER_ACCE = 0.001;
+const float D_OVER_ACCE = 0.05;
+
 #define CAR_LENGTH 5.0 //unit:m
 
 float goal_distance_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data) {
@@ -67,15 +69,14 @@ float inefficiency_cost(const Vehicle & vehicle, const vector<Vehicle> & traject
     }
     cout << "EFFICIENCY cost is " << cost << endl;
 
-    
+    /*
     if (trajectory_last.state.compare("LCL") == 0 || trajectory_last.state.compare("LCR") == 0) {
         if (ego.state.compare("PLCL") == 0 || ego.state.compare("PLCR") == 0) {
 		cost += 1.0;
 	}
     }
-
     cout << "EFFICIENCY cost is " << cost << endl;
-
+    */
     return cost;
 }
 
@@ -130,19 +131,35 @@ float collision_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory
     return cost;
 }
 
-float over_acceleration_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data) {
+float s_over_acceleration_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data) {
     float cost = 0.0;
     Vehicle trajectory_last = trajectory[1]; 
     Vehicle ego = vehicle;
+    /*
     if (fabs(trajectory_last.as - ego.as) > 1.0) {
 	cost += 1.0;
-    }
+    }*/
+    cost += fabs(trajectory_last.vs - ego.vs);
+    cout << "Over Acceleration cost(s direction) is " << cost << endl; 
 
+    /*
+    cost += fabs(trajectory_last.vd - ego.vd);
+    cout << "new_vd is " << trajectory_last.vd << ", old vd is " << ego.vd << endl;
     cout << "Over Acceleration cost is " << cost << endl; 
-
+    */
     return cost;
 }
 
+float d_over_acceleration_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data) {
+    float cost = 0.0;
+    Vehicle trajectory_last = trajectory[1]; 
+    Vehicle ego = vehicle;
+    cost += fabs(trajectory_last.vd - ego.vd);
+    cout << "new_vd is " << trajectory_last.vd << ", old vd is " << ego.vd << endl;
+    cout << "Over Acceleration cost(d direction) is " << cost << endl; 
+
+    return cost;
+}
 float lane_speed(const map<int, vector<Vehicle>> & predictions, int lane) {
     /*
     Average all non ego vehicles' speed, so to get the speed limit for a lane,
@@ -177,8 +194,8 @@ float calculate_cost(const Vehicle & vehicle, const map<int, vector<Vehicle>> & 
     float cost = 0.0;
 
     //Add additional cost functions here.
-    vector< function<float(const Vehicle & , const vector<Vehicle> &, const map<int, vector<Vehicle>> &, map<string, float> &)>> cf_list = {goal_distance_cost, inefficiency_cost, collision_cost, over_acceleration_cost};
-    vector<float> weight_list = {REACH_GOAL, EFFICIENCY, COLLISION, OVER_ACCE};
+    vector< function<float(const Vehicle & , const vector<Vehicle> &, const map<int, vector<Vehicle>> &, map<string, float> &)>> cf_list = {goal_distance_cost, inefficiency_cost, collision_cost, s_over_acceleration_cost, d_over_acceleration_cost};
+    vector<float> weight_list = {REACH_GOAL, EFFICIENCY, COLLISION, S_OVER_ACCE, D_OVER_ACCE};
     
     for (int i = 0; i < cf_list.size(); i++) {
         float new_cost = weight_list[i]*cf_list[i](vehicle, trajectory, predictions, trajectory_data);

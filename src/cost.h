@@ -12,7 +12,9 @@ float inefficiency_cost(const Vehicle & vehicle, const vector<Vehicle> & traject
 
 float collision_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data);
 
-float over_acceleration_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data);
+float s_over_acceleration_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data);
+
+float d_over_acceleration_cost(const Vehicle & vehicle, const vector<Vehicle> & trajectory, const map<int, vector<Vehicle>> & predictions, map<string, float> & data);
 
 float lane_speed(const map<int, vector<Vehicle>> & predictions, int lane);
 

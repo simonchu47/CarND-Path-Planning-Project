@@ -13,7 +13,8 @@
 #define TIME_INTERVAL 1.0
 #define SPEED_LIMIT 20.0 //unit:m/s
 #define ACCELERATION_LIMIT 0.9 //unit:m/s/s
-#define LC_D_SPEED 2.0 //unit:m/s
+#define LC_D_SPEED 2.0 //unit:m/si
+
 /**
  * Initializes Vehicle
  */
@@ -210,14 +211,16 @@ vector<double> Vehicle::get_kinematics(map<int, vector<Vehicle>> predictions, in
 
 vector<double> Vehicle::action(map<int, vector<Vehicle>> predictions, int lane, double interval, int choice) {
     double new_as = 0.0;
-    
+    /*
     //if (action.compare("SPEEDUP")) {
     if(choice == 0) {
         new_as = this->max_acceleration;
     //} else if (action.compare("SPEEDDOWN")) {
     } else if (choice == 2) {
         new_as = -this->max_acceleration;
-    }
+    }*/
+
+    new_as = this->max_acceleration - choice*(2*this->max_acceleration/(this->actions.size() - 1));
 
     double new_vs = min(this->vs + new_as*interval, this->target_speed);
     //double new_s = this->s + new_vs*interval + new_as*interval*interval/2.0;
@@ -256,7 +259,7 @@ vector<vector<Vehicle>> Vehicle::keep_lane_trajectory(map<int, vector<Vehicle>> 
     }
     int choice = 0;
     if (car_ahead) {
-        choice = 2;
+        choice = 3;
     }
 
     for(choice; choice < this->actions.size(); ++choice) {
@@ -317,7 +320,7 @@ vector<vector<Vehicle>> Vehicle::prep_lane_change_trajectory(string state, map<i
     }
     int choice = 0;
     if (car_ahead) {
-        choice = 2;
+        choice = 3;
     }
 
     for(choice; choice < this->actions.size(); ++choice) {
@@ -401,7 +404,7 @@ vector<vector<Vehicle>> Vehicle::lane_change_trajectory(string state, map<int, v
     }
     int choice = 0;
     if (car_ahead) {
-        choice = 2;
+        choice = 3;
     }
 
     for(choice; choice < this->actions.size(); ++choice) {

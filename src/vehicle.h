@@ -51,7 +51,7 @@ public:
 
   string state;
 
-  vector<string> actions = {"SPEEDUP", "MAINTAIN", "SLOWDOWN"};
+  vector<string> actions = {"SPEEDUP", "HALF-SPEEDUP", "MAINTAIN", "HALF-SLOWDOWN", "SLOWDOWN"};
 
   //bool LC_finished = true;
 

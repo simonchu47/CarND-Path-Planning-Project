@@ -8,8 +8,8 @@
 #include "cost.h"
 
 #define LANE_WIDTH 4.0 
-#define SAFE_DISTANCE 20.0
-#define CAR_LENGTH 3.0
+#define SAFE_DISTANCE 30.0
+#define CAR_LENGTH 5.0
 #define TIME_INTERVAL 1.0
 #define SPEED_LIMIT 20.0 //unit:m/s
 #define ACCELERATION_LIMIT 0.9 //unit:m/s/s
@@ -35,7 +35,7 @@ Vehicle::Vehicle(double s, double d, double v_s, double v_d, double a_s, double 
     this->goal_lane = target_lane;
     this->goal_s = this->s + SPEED_LIMIT*TIME_INTERVAL*2.0; // It's vitual goal
     this->target_speed = SPEED_LIMIT;
-    
+    //this->LC_finished = true;
 }
 
 Vehicle::~Vehicle() {}
@@ -90,7 +90,9 @@ vector<string> Vehicle::successor_states() {
     instantaneously, so LCL and LCR can only transition back to KL.
     */
     vector<string> states;
-    states.push_back("KL");
+    //if (this->LC_finished) {
+        states.push_back("KL");
+    //}
     string state = this->state;
     if(state.compare("KL") == 0) {
         states.push_back("PLCL");
@@ -218,7 +220,9 @@ vector<double> Vehicle::action(map<int, vector<Vehicle>> predictions, int lane, 
     }
 
     double new_vs = min(this->vs + new_as*interval, this->target_speed);
-    double new_s = this->s + new_vs*interval + new_as*interval*interval/2.0;
+    //double new_s = this->s + new_vs*interval + new_as*interval*interval/2.0;
+    double new_s = this->s + new_vs*interval;
+
     cout << "new_vs is " << new_vs << ", new_as is " << new_as << endl;
     return{new_s, new_vs, new_as};
 }
@@ -252,7 +256,7 @@ vector<vector<Vehicle>> Vehicle::keep_lane_trajectory(map<int, vector<Vehicle>> 
     }
     int choice = 0;
     if (car_ahead) {
-        choice = 1;
+        choice = 2;
     }
 
     for(choice; choice < this->actions.size(); ++choice) {
@@ -313,7 +317,7 @@ vector<vector<Vehicle>> Vehicle::prep_lane_change_trajectory(string state, map<i
     }
     int choice = 0;
     if (car_ahead) {
-        choice = 1;
+        choice = 2;
     }
 
     for(choice; choice < this->actions.size(); ++choice) {
@@ -382,7 +386,7 @@ vector<vector<Vehicle>> Vehicle::lane_change_trajectory(string state, map<int, v
     //Check if a lane change is possible (check if another vehicle occupies that spot).
     for (map<int, vector<Vehicle>>::iterator it = predictions.begin(); it != predictions.end(); ++it) {
         next_lane_vehicle = it->second[0];
-        if (next_lane_vehicle.s < (this->s + CAR_LENGTH*2) && next_lane_vehicle.s > (this->s - CAR_LENGTH*2) && next_lane_vehicle.lane == new_lane) {
+        if (next_lane_vehicle.s < (this->s + CAR_LENGTH*2) && next_lane_vehicle.s > (this->s - CAR_LENGTH) && next_lane_vehicle.lane == new_lane) {
             //If lane change is not possible, return empty trajectory.
             return trajectory;
         }
@@ -397,7 +401,7 @@ vector<vector<Vehicle>> Vehicle::lane_change_trajectory(string state, map<int, v
     }
     int choice = 0;
     if (car_ahead) {
-        choice = 1;
+        choice = 2;
     }
 
     for(choice; choice < this->actions.size(); ++choice) {
@@ -553,5 +557,11 @@ void Vehicle::update_state(double s, double d, double vs, double vd) {
     this->goal_s = this->s + SPEED_LIMIT*TIME_INTERVAL*2.0; // It's vitual goal
     this -> max_acceleration = ACCELERATION_LIMIT;
     this->target_speed = SPEED_LIMIT;
+    /*
+    if (this->lane = this->goal_lane) {
+        this->LC_finished = true;
+    } else {
+	this->LC_finished = false;
+    }*/
 }
 

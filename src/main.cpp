@@ -381,17 +381,17 @@ int main() {
 		  double s = sensor_fusion[i][5];
 		  double d = sensor_fusion[i][6];
 		  double theta = atan2(y,x);
-		  vector<double> s_d = getFrenet(x, y, theta, map_waypoints_x, map_waypoints_y);
+		  //vector<double> s_d = getFrenet(x, y, theta, map_waypoints_x, map_waypoints_y);
 		  vector<double> vs_vd = getFrenetSpeed(x, y, theta, vx, vy, map_waypoints_x, map_waypoints_y);
-		  Vehicle non_ego = Vehicle(s_d[0], s_d[1], vs_vd[0], vs_vd[1], 0.0, 0.0, "CS", 0);
+		  Vehicle non_ego = Vehicle(s, d, vs_vd[0], vs_vd[1], 0.0, 0.0, "CS", 0);
 		  cout << "car " << v_id << " on lane " << non_ego.lane << " s = " << non_ego.s << ", vs = " << non_ego.vs << endl;
 
 		  vector<Vehicle> pred = non_ego.generate_predictions(PREDICT_TIME_SPAN, 1);
 		  predictions[v_id] = pred;
 		}
 		
-		cout << "car_x is " << car_x << endl;
-		cout << "car_y is " << car_y << endl;	
+		cout << "car_s is " << car_s << endl;
+		cout << "car_d is " << car_d << endl;	
 		//cout << "car_yaw is " << car_yaw << endl;
 		double car_yaw_rad = deg2rad(car_yaw);
 		//cout << "car speed = " << car_speed << endl;
@@ -401,7 +401,7 @@ int main() {
 		//cout << "car_vy is " << car_vy << endl;
 
                 vector<double> car_vs_vd = getFrenetSpeed(car_x, car_y, car_yaw_rad, car_vx, car_vy, map_waypoints_x, map_waypoints_y);
-		//cout << "car vs vd is " << car_vs_vd[0] << ", " << car_vs_vd[1] << endl;		
+		cout << "car vs vd is " << car_vs_vd[0] << ", " << car_vs_vd[1] << endl;		
 
 		ego.update_state(car_s, car_d, car_vs_vd[0], car_vs_vd[1]);
 
@@ -412,7 +412,7 @@ int main() {
 		if (traj.size() > 0) {
 		cout << "traj[0].(s,d) is " << traj[0].s << ", "<< traj[0].d << endl;
 
-		cout << "traj[1].(s,d) is " << traj[1].s << ", "<< traj[1].d << "state=" << traj[1].state << endl;
+		cout << "traj[1].(s,d) is " << traj[1].s << ", "<< traj[1].d << " state = " << traj[1].state << endl;
 
 		ego.state = traj[1].state;
 		ego.goal_lane = traj[1].goal_lane;
@@ -487,7 +487,9 @@ int main() {
                 //double new_s = car_s + new_vs*3.0 + new_as*3.0*3.0/2.0;
                 //double new_lane = (int)car_d/4;
 		double wp1_time = PREDICT_TIME_SPAN*1.2;
-		double wp1_s = traj[1].s + traj[1].vs*wp1_time + traj[1].as*wp1_time*wp1_time/2;
+		//double wp1_s = traj[1].s + traj[1].vs*wp1_time + traj[1].as*wp1_time*wp1_time/2;
+		double wp1_s = traj[1].s + traj[1].vs*wp1_time;
+
 		//double wp1_d = traj[1].d + traj[1].vd*wp1_time + traj[1].ad*wp1_time*wp1_time/2;
                 double wp1_d = traj[1].d;
 
@@ -499,7 +501,9 @@ int main() {
 
 		// Extend the wp1 to get the second way point
 		double wp2_time = PREDICT_TIME_SPAN*2;
-		double wp2_s = traj[1].s + traj[1].vs*wp2_time + traj[1].as*wp2_time*wp2_time/2;
+		//double wp2_s = traj[1].s + traj[1].vs*wp2_time + traj[1].as*wp2_time*wp2_time/2;
+		double wp2_s = traj[1].s + traj[1].vs*wp2_time;
+
 		//double wp2_d = traj[1].d + traj[1].vd*wp2_time + traj[1].ad*wp2_time*wp2_time/2;
                 double wp2_d = traj[1].d;
                 //double wp2_d = 4*traj[1].lane + 2.0;

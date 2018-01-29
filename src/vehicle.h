@@ -53,6 +53,8 @@ public:
 
   vector<string> actions = {"SPEEDUP", "MAINTAIN", "SLOWDOWN"};
 
+  //bool LC_finished = true;
+
   /**
   * Constructor
   */

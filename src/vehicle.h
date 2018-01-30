@@ -13,17 +13,7 @@ public:
 
   map<string, int> lane_direction = {{"PLCL", -1}, {"LCL", -1}, {"LCR", 1}, {"PLCR", 1}};
 
-  struct collider{
-
-    bool collision ; // is there a collision?
-    int  time; // time collision happens
-
-  };
-
-  int L = 1;
-
-  //int preferred_buffer = 6; // impacts "keep lane" behavior.
-  double preferred_buffer = 6;
+  double preferred_buffer;
 
   int lane;
 
@@ -53,13 +43,11 @@ public:
 
   vector<string> actions = {"SPEEDUP", "HALF-SPEEDUP", "MAINTAIN", "HALF-SLOWDOWN", "SLOWDOWN"};
 
-  //bool LC_finished = true;
-
   /**
   * Constructor
   */
   Vehicle();
-  //Vehicle(int lane, float s, float v, float a, string state="CS", int target_lane);
+
   Vehicle(double s, double d, double vs, double vd, double as, double ad, string state, int target_lane);
 
   /**
@@ -73,21 +61,13 @@ public:
 
   vector<vector<Vehicle>> generate_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
-  vector<double> get_kinematics(map<int, vector<Vehicle>> predictions, int lane, double interval);
-
   vector<double> action(map<int, vector<Vehicle>> predictions, int lane, double interval, int choice);
 
-  vector<Vehicle> constant_speed_trajectory();
-
-  vector<vector<Vehicle>> keep_lane_trajectory(map<int, vector<Vehicle>> predictions);
+  vector<vector<Vehicle>> keep_lane_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
   vector<vector<Vehicle>> lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
 
   vector<vector<Vehicle>> prep_lane_change_trajectory(string state, map<int, vector<Vehicle>> predictions);
-
-  void increment(int dt);
-
-  vector<double> position_at(double t);
 
   bool get_vehicle_behind(map<int, vector<Vehicle>> predictions, int lane, Vehicle & rVehicle);
 
@@ -95,9 +75,9 @@ public:
 
   vector<Vehicle> generate_predictions(double interval=0.5, int horizon=2);
 
-  void realize_next_state(vector<Vehicle> trajectory);
+  vector<double> position_at(double t);
 
-  void configure(vector<int> road_data);
+  void configure(vector<double> road_data);
  
   void update_state(double s, double d, double vs, double vd);
 
